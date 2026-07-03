@@ -1,9 +1,10 @@
 import os
 import time
-import json
-import random
-from src.gen_for_tiki import generate_response
 import string
+import sys
+import itertools
+import threading
+from src.generator import generate_response
 
 dark_gray = '\033[38;2;43;43;43m'
 terracotta = '\033[38;2;211;124;91m'
@@ -12,32 +13,26 @@ cream = '\033[38;2;245;238;225m'
 light_gray = '\033[38;2;168;162;160m'
 reset = '\033[0m'
 bold = '\033[1m'
-dim = '\033[2m'
 hide_cursor = '\033[?25l'
 show_cursor = '\033[?25h'
 
-model = 'tiki'
+model = 'tigr'
+stop_animation = False
 
-try:
-    with open('data/datasets.json', 'r', encoding='utf-8') as f:
-        data = json.load(f)
 
-    intent_answers = {}
-    responses_pool = data.get('responses', {})
-
-    for intent in data.get('intents', []):
-        label = intent['label']
-        answers_list = responses_pool.get(label, None)
-
-        if answers_list:
-            for phrase in intent.get('phrases', []):
-                intent_answers[phrase.lower().strip()] = answers_list
-
-except Exception:
-    intent_answers = {}
+def animate_thinking():
+    global stop_animation
+    for char in itertools.cycle(['|', '/', '-', '\\']):
+        if stop_animation:
+            break
+        sys.stdout.write(f'\r{char}')
+        sys.stdout.flush()
+        time.sleep(0.1)
+    sys.stdout.write('\r' + ' ' * 30 + '\r')
 
 
 def main_menu(device, version):
+    global stop_animation
     os.system('clear')
     print(f"{terracotta}┌─────────────────────────────────────────────────────────────────────────┐{reset}")
     print(
@@ -63,16 +58,17 @@ def main_menu(device, version):
 
         print(hide_cursor, end="")
         print("\033[2B\r", end="")
-        print(f"{dim}{dark_gray} ⏳ Vinux думает...{reset}", end="\r")
+        print()
 
-        clean_input = user_text.lower().translate(str.maketrans('', '', string.punctuation)).strip()
+        stop_animation = False
+        t = threading.Thread(target=animate_thinking)
+        t.start()
 
-        if clean_input in intent_answers and intent_answers[clean_input]:
-            time.sleep(0.05)
-            bot_output = random.choice(intent_answers[clean_input])
-        else:
-            bot_output = generate_response(user_text)
+        bot_output = generate_response(user_text)
 
-        print("\033[K", end="")
+        stop_animation = True
+        t.join()
+
+        sys.stdout.write('\r\033[K')
         print(f' {bold}{beige}Vinux >>>{reset} {cream}{bot_output}{reset}')
         print()

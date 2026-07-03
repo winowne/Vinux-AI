@@ -7,12 +7,13 @@ import re
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+chat_history = []
+
 BLOCK_SIZE = 64
 N_EMBED = 384
 N_HEAD = 6
 N_LAYER = 6
 VOCAB_SIZE = 30000
-
 
 class Head(nn.Module):
     def __init__(self, head_size):
@@ -32,7 +33,6 @@ class Head(nn.Module):
         v = self.value(x)
         return wei @ v
 
-
 class MultiHeadAttention(nn.Module):
     def __init__(self, num_heads, head_size):
         super().__init__()
@@ -42,7 +42,6 @@ class MultiHeadAttention(nn.Module):
     def forward(self, x):
         out = torch.cat([h(x) for h in self.heads], dim=-1)
         return self.proj(out)
-
 
 class FeedForward(nn.Module):
     def __init__(self, n_embed):
@@ -55,7 +54,6 @@ class FeedForward(nn.Module):
 
     def forward(self, x):
         return self.net(x)
-
 
 class Block(nn.Module):
     def __init__(self, n_embed, n_head):
@@ -70,7 +68,6 @@ class Block(nn.Module):
         x = x + self.sa(self.ln1(x))
         x = x + self.ffwd(self.ln2(x))
         return x
-
 
 class VinuxLanguageModel(nn.Module):
     def __init__(self, vocab_size):
@@ -91,7 +88,6 @@ class VinuxLanguageModel(nn.Module):
         logits = self.lm_head(x)
         return logits, None
 
-
 vocab_path = 'vocabs/tigr_vocab.json'
 weights_path = 'models/tigr.pt'
 
@@ -107,11 +103,11 @@ for token, idx in special_tokens:
     id_to_word[idx] = token
 
 model = VinuxLanguageModel(vocab_size=VOCAB_SIZE)
-weights = torch.load(weights_path, map_location=device)
-
-model_dict = model.state_dict()
-weights = {k: v for k, v in weights.items() if k in model_dict and model_dict[k].shape == v.shape}
-model.load_state_dict(weights, strict=True)
+if os.path.exists(weights_path):
+    weights = torch.load(weights_path, map_location=device)
+    model_dict = model.state_dict()
+    weights = {k: v for k, v in weights.items() if k in model_dict and model_dict[k].shape == v.shape}
+    model.load_state_dict(weights, strict=True)
 model = model.to(device)
 model.eval()
 
@@ -124,12 +120,18 @@ def clean_and_format_text(text):
     text = re.sub(r'\s+', ' ', text).strip()
     if text:
         text = text[0].upper() + text[1:]
+        if text.endswith(','):
+            text = text[:-1] + '.'
+        elif not text.endswith(('.', '!', '?')):
+            text += '.'
+
     return text
 
 
-def generate_response(user_text):
+# 1. Сначала выносим саму логику генерации в отдельную функцию
+def run_inference(input_text):
     input_ids = [vocab["<start>"]]
-    for word in user_text.lower().split():
+    for word in input_text.lower().split():
         input_ids.append(vocab.get(word, vocab["<unk>"]))
     input_ids.append(vocab["<transition>"])
 
@@ -137,11 +139,12 @@ def generate_response(user_text):
     response_words = []
 
     with torch.no_grad():
-        for i in range(40):
+        for i in range(100):
             x_cond = x[:, -BLOCK_SIZE:]
             logits, _ = model(x_cond)
             next_token_logits = logits[:, -1, :]
 
+            # Твоя логика с температурой
             temp = next_token_logits / 0.8
             top_k = 10
             v, ix = torch.topk(temp, top_k)
@@ -149,26 +152,19 @@ def generate_response(user_text):
             probability = F.softmax(temp, dim=-1)
             next_token_id = torch.multinomial(probability, 1).item()
 
-            if next_token_id == vocab["<end>"]:
-                break
-            if next_token_id == vocab["<pad>"] and i > 0:
+            if next_token_id == vocab["<end>"] or (next_token_id == vocab["<pad>"] and i > 0):
                 break
 
-            next_token_tensor = torch.tensor([[next_token_id]], dtype=torch.long).to(device)
-            x = torch.cat((x, next_token_tensor), dim=1)
+            x = torch.cat((x, torch.tensor([[next_token_id]], dtype=torch.long).to(device)), dim=1)
+            response_words.append(id_to_word.get(next_token_id, "<unk>"))
 
-            word = id_to_word.get(next_token_id, "<unk>")
-            response_words.append(word)
+    return clean_and_format_text(" ".join(response_words))
 
-    raw_output = " ".join(response_words)
-    final_text = clean_and_format_text(raw_output)
+def generate_response(user_text):
+    global chat_history
+    chat_history.append(user_text)
+    context = " ".join(chat_history[-2:])
+    response = run_inference(context)
+    chat_history.append(response)
 
-    return final_text if final_text else "[Нейросеть задумалась]"
-
-
-if __name__ == '__main__':
-    while True:
-        prompt = input("Введи текст (или 'exit'): ")
-        if prompt.lower() == 'exit':
-            break
-        print(f">> {generate_response(prompt)}\n")
+    return response
