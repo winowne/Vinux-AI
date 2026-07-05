@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 import torch
 import torch.nn as nn
@@ -89,8 +88,8 @@ class VinuxLanguageModel(nn.Module):
         logits = self.lm_head(x)
         return logits, None
 
-vocab_path = 'vocabs/vocab.json'
-weights_path = 'models/model.pt'
+vocab_path = Path('vocabs/vocab.json')
+weights_path = Path('models/model.pt')
 
 with open(vocab_path, 'r', encoding='utf-8') as f:
     kaggle_vocab = json.load(f)
@@ -104,7 +103,7 @@ for token, idx in special_tokens:
     id_to_word[idx] = token
 
 model = VinuxLanguageModel(vocab_size=VOCAB_SIZE)
-if os.path.exists(weights_path):
+if weights_path.exists():
     weights = torch.load(weights_path, map_location=device)
     model_dict = model.state_dict()
     weights = {k: v for k, v in weights.items() if k in model_dict and model_dict[k].shape == v.shape}
