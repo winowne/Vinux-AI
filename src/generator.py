@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -7,7 +8,7 @@ import re
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-chat_history = []
+chat_history = ['ну привет']
 
 BLOCK_SIZE = 64
 N_EMBED = 384
@@ -88,8 +89,8 @@ class VinuxLanguageModel(nn.Module):
         logits = self.lm_head(x)
         return logits, None
 
-vocab_path = 'vocabs/tigr_vocab.json'
-weights_path = 'models/tigr.pt'
+vocab_path = 'vocabs/vocab.json'
+weights_path = 'models/model.pt'
 
 with open(vocab_path, 'r', encoding='utf-8') as f:
     kaggle_vocab = json.load(f)
@@ -127,8 +128,6 @@ def clean_and_format_text(text):
 
     return text
 
-
-# 1. Сначала выносим саму логику генерации в отдельную функцию
 def run_inference(input_text):
     input_ids = [vocab["<start>"]]
     for word in input_text.lower().split():
@@ -139,13 +138,12 @@ def run_inference(input_text):
     response_words = []
 
     with torch.no_grad():
-        for i in range(100):
+        for i in range(1024):
             x_cond = x[:, -BLOCK_SIZE:]
             logits, _ = model(x_cond)
             next_token_logits = logits[:, -1, :]
 
-            # Твоя логика с температурой
-            temp = next_token_logits / 0.8
+            temp = next_token_logits / 0.7
             top_k = 10
             v, ix = torch.topk(temp, top_k)
             temp = torch.full_like(temp, float('-inf')).scatter_(-1, ix, v)
@@ -166,5 +164,8 @@ def generate_response(user_text):
     context = " ".join(chat_history[-2:])
     response = run_inference(context)
     chat_history.append(response)
+
+    if len(chat_history) > 2:
+        chat_history.pop(0)
 
     return response
