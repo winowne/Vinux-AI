@@ -1,0 +1,82 @@
+$primary: #0178d4;
+$background: #1d1d20;
+$text: #f5f5f4;
+$error: #ff3139;
+$warning: #ffec00;
+$success: #00e615;
+
+HistoryScreen {
+    background: $background;
+    align: center middle;
+}
+
+#title {
+    background: $background;
+    color: $primary;
+    text-style: bold;
+    width: 100%;
+    height: auto;
+    margin-bottom: 1;
+    text-align: center;
+}
+
+#no-sessions-msg {
+    background: $background;
+    color: $error;
+    text-style: bold;
+    width: 100%;
+    height: auto;
+    text-align: center;
+    margin-bottom: 1;
+}
+
+#session_list {
+    background: transparent;
+    border: none;
+}
+
+#session_list OptionList > .option-list--option {
+    background: transparent;
+    padding: 0 1;
+}
+
+#session_list OptionList > .option-list--option-highlighted {
+    background: transparent;
+}
+
+#session_list OptionList > .option-list--option-hover {
+    background: transparent;
+}
+
+#btn-row {
+    layout: horizontal;
+    align: center middle;
+    height: auto;
+    display: none;
+}
+
+#create_yes, #create_no {
+    width: 14;
+    height: 3;
+    content-align: center middle;
+    margin: 0 1;
+    background: transparent;
+}
+
+#create_yes {
+    border: round $primary;
+    color: $primary;
+}
+
+#create_yes:hover {
+    text-style: bold;
+}
+
+#create_no {
+    border: round #f5f5f4;
+    color: #f5f5f4;
+}
+
+#create_no:hover {
+    text-style: bold;
+}

@@ -1,0 +1,42 @@
+$primary: #0178d4;
+$background: #1d1d20;
+$text: #f5f5f4;
+$error: #ff3139;
+$warning: #ffec00;
+$success: #00e615;
+
+StartChatScreen {
+    background: $background;
+    align: center middle; 
+}
+
+#welcome-container {
+    width: 60;
+    height: auto;
+    align: center middle;
+}
+
+#suggestions-box {
+    border: solid $primary;
+    color: $text;
+    width: 100%;
+    height: auto;
+    max-height: 5;
+    margin-bottom: 0;
+    display: none;
+}
+
+#user_input {
+    border: round $primary;
+    width: 100%;
+    height: auto;
+    margin-top: 0;    
+    padding: 0 2;
+}
+
+#mascot {
+    color: $primary; 
+    height: auto;
+    margin-bottom: 1;
+    text-align: center;
+}

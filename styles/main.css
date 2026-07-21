@@ -1,0 +1,108 @@
+$bg_color: #1d1d20;
+$primary_color: #0178d4;
+$text_light: #f5f5f4;
+$error: #ff3139;
+$warning: #ffec00;
+$success: #00e615;
+
+Screen {
+    background: $bg_color;
+}
+
+#frame, #frame2 {
+    background: $bg_color;
+    color: $primary_color;
+}
+
+#logo {
+    color: $primary_color;
+    height: 100%;
+    width: 39;
+}
+
+#top_content {
+    layout: horizontal;
+    height: 7;
+    width: 100%;
+    margin-top: 1;
+    margin-left: 1;
+}
+
+#sys_info_block {
+    layout: vertical;
+    height: auto;
+    width: 1fr;
+    align: center middle;
+    margin-left: 2;
+}
+
+.info_row {
+    layout: horizontal;
+    height: 1;
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.info_text {
+    color: $text_light;
+    text-style: bold;
+    height: 1;
+    width: auto;
+}
+
+.info_value {
+    color: $primary_color;
+    text-style: bold;
+    height: 1;
+    width: 1fr;
+}
+
+#menu_options {
+    background: transparent;
+    border: none;
+    margin-top: 1;
+    margin-left: 1;
+    height: auto;
+    width: 45;
+}
+
+#menu_options OptionList {
+    background: transparent;
+    border: none;
+}
+
+#menu_options OptionList > .option-list--option {
+    background: transparent;
+    padding: 0 1;
+    color: $text_light;
+}
+
+#menu_options OptionList > .option-list--option-highlighted {
+    background: transparent;
+    color: $text_light;
+    text-style: bold;
+}
+
+#menu_options OptionList:focus > .option-list--option-highlighted {
+    background: transparent;
+    color: $text_light;
+    text-style: bold;
+}
+
+#menu_options OptionList > .option-list--option-hover {
+    background: transparent;
+}
+
+#matrix_rain {
+    color: $primary_color;
+    text-style: bold;
+    height: 1;
+    width: 100%;
+}
+
+#load_progress {
+    color: $primary_color;
+    text-style: bold;
+    height: 1;
+    width: 11;
+}
